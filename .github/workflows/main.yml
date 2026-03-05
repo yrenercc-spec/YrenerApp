@@ -1,0 +1,56 @@
+name: Build YrenerMod ARM64
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # ШАГ 1: Обновлено до v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # ШАГ 2: Устанавливаем Android NDK
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r25c
+        add-to-path: true
+
+    # ШАГ 3: Скачиваем и собираем Dobby
+    - name: Download Dobby
+      run: |
+        git clone https://github.com/jmpews/Dobby.git libs/Dobby
+        cd libs/Dobby
+        mkdir -p build && cd build
+        cmake .. \
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-21 \
+          -DCMAKE_BUILD_TYPE=Release
+        make -j4
+        cp libdobby.a ../../libs/Dobby/libdobby.a
+
+    # ШАГ 4: Собираем мод
+    - name: Build YrenerMod
+      run: |
+        mkdir -p build && cd build
+        cmake .. \
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-21 \
+          -DCMAKE_BUILD_TYPE=Release
+        make -j4
+
+    # ШАГ 5: ИСПРАВЛЕНО: Обновлено до v4
+    - name: Upload libYrenerMod.so
+      uses: actions/upload-artifact@v4
+      with:
+        name: libYrenerMod-arm64
+        path: build/libYrenerMod.so
+        
