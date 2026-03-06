@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.10)
+project(YrenerMod)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fvisibility=hidden")
+add_library(YrenerMod SHARED src/main.cpp)
+find_library(log-lib log)
+find_library(android-lib android)
+target_link_libraries(YrenerMod ${log-lib} ${android-lib})
